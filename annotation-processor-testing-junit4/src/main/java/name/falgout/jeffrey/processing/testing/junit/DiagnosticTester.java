@@ -45,6 +45,11 @@ public final class DiagnosticTester extends ParentRunner<ExpectedDiagnostic> {
     } catch (Throwable e) {
       throw new InitializationError(e);
     }
+
+    if (processors.isEmpty()) {
+      throw new InitializationError(
+          "Did you forget to annotate " + testClass.getSimpleName() + " with @UseProcessor?");
+    }
   }
 
   @Override
