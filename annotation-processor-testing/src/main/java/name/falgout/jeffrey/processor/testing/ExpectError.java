@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
 @Target({ANNOTATION_TYPE, CONSTRUCTOR, FIELD, LOCAL_VARIABLE, METHOD, PACKAGE, PARAMETER, TYPE,
     TYPE_PARAMETER, TYPE_USE})
 public @interface ExpectError {
-  String value();
+  String value() default "";
 
   boolean regex() default false;
 

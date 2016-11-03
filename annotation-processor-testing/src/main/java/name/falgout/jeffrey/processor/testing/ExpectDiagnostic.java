@@ -23,9 +23,9 @@ import javax.tools.Diagnostic;
 @Target({ANNOTATION_TYPE, CONSTRUCTOR, FIELD, LOCAL_VARIABLE, METHOD, PACKAGE, PARAMETER, TYPE,
     TYPE_PARAMETER, TYPE_USE})
 public @interface ExpectDiagnostic {
-  Diagnostic.Kind kind();
+  Diagnostic.Kind value();
 
-  String message();
+  String message() default "";
 
   boolean regex() default false;
 

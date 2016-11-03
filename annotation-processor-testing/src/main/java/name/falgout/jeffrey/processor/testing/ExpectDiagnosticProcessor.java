@@ -53,10 +53,10 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
         long actualLine = diagnostic.getLineNumber() + expected.lineOffset();
         String testName = expected.testName();
         if (testName.isEmpty()) {
-          testName = String.format("%s#%d@%d", expected.kind(), i + 1, diagnostic.getLineNumber());
+          testName = String.format("%s#%d@%d", expected.value(), i + 1, diagnostic.getLineNumber());
         }
 
-        expectations.add(new AutoValue_ExpectedDiagnostic(expected.kind(), message, source,
+        expectations.add(new AutoValue_ExpectedDiagnostic(expected.value(), message, source,
             actualLine, testName));
       } catch (IllegalArgumentException e) {}
     }

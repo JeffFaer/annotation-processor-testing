@@ -52,12 +52,12 @@ public final class ExpectedDiagnostics {
   }
 
   @AutoAnnotation
-  private static ExpectDiagnostic createExpectDiagnostic(Diagnostic.Kind kind,
+  private static ExpectDiagnostic createExpectDiagnostic(Diagnostic.Kind value,
       String message,
       boolean regex,
       int lineOffset,
       String testName) {
-    return new AutoAnnotation_ExpectedDiagnostics_createExpectDiagnostic(kind, message, regex,
+    return new AutoAnnotation_ExpectedDiagnostics_createExpectDiagnostic(value, message, regex,
         lineOffset, testName);
   }
 }
