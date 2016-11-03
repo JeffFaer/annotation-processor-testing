@@ -40,8 +40,13 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
         String message = expected.regex() ? Pattern.quote(expected.message()) : expected.message();
         JavaFileObject source = diagnostic.getSource();
         long actualLine = diagnostic.getLineNumber() + expected.lineOffset();
+        String testName = expected.testName();
+        if (testName.isEmpty()) {
+          testName = String.format("%s@%d", expected.kind(), diagnostic.getLineNumber());
+        }
+
         expectations.add(new AutoValue_ExpectedDiagnostic(expected.kind(), Pattern.compile(message),
-            source, actualLine));
+            source, actualLine, testName));
       } catch (NumberFormatException e) {}
     }
 

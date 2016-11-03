@@ -7,11 +7,13 @@
   <packaging>pom</packaging>
   <modules>
     <module>annotation-processor-testing</module>
+    <module>annotation-processor-testing-junit4</module>
   </modules>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+
   <dependencyManagement>
     <dependencies>
       <dependency>

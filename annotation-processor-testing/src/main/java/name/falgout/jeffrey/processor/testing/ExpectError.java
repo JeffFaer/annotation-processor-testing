@@ -26,4 +26,6 @@ public @interface ExpectError {
   boolean regex() default false;
 
   int lineOffset() default 0;
+
+  String testName() default "";
 }

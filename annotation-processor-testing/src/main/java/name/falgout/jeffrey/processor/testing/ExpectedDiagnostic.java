@@ -23,6 +23,8 @@ public abstract class ExpectedDiagnostic {
 
   public abstract long getLineNumber();
 
+  public abstract String getTestName();
+
   public final void checkCompilation(Compilation compilation) {
     DiagnosticInFile inFile;
     switch (getKind()) {
