@@ -10,6 +10,7 @@ import static org.hamcrest.CoreMatchers.describedAs;
 import java.lang.annotation.Annotation;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
@@ -26,6 +27,12 @@ public abstract class ExpectedDiagnostic<A extends Annotation> {
   public abstract JavaFileObject getOriginalSource();
 
   public abstract long getOriginalLineNumber();
+
+  public abstract @Nullable String getEnclosingClassName();
+
+  public final Class<?> getEnclosingClass() throws ClassNotFoundException {
+    return Class.forName(getEnclosingClassName());
+  }
 
   public final long getExpectedLineNumber() {
     return getOriginalLineNumber() + getExpectDiagnostic().lineOffset();

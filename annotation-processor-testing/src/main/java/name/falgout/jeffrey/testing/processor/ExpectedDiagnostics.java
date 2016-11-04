@@ -32,6 +32,11 @@ public final class ExpectedDiagnostics {
     return diagnostics;
   }
 
+  static ExpectDiagnostic replaceTestName(ExpectDiagnostic original, String testName) {
+    return createExpectDiagnostic(original.value(), original.message(), original.regex(),
+        original.lineOffset(), testName);
+  }
+
   static ExpectDiagnostic createExpectDiagnostic(ExpectError expectError) {
     return createExpectDiagnostic(Diagnostic.Kind.ERROR, expectError.value(), expectError.regex(),
         expectError.lineOffset(), expectError.testName());
