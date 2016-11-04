@@ -39,8 +39,12 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
 
   public List<ExpectedDiagnostic<?>> getExpectedDiagnostics(Compilation compilation) {
     List<ExpectedDiagnostic<?>> expectations = new ArrayList<>();
-    for (int i = 0; i < compilation.diagnostics().size(); i++) {
-      Diagnostic<? extends JavaFileObject> diagnostic = compilation.diagnostics().get(i);
+    List<Diagnostic<? extends JavaFileObject>> diagnostics =
+        new ArrayList<>(compilation.diagnostics());
+    diagnostics.sort(ActualDiagnostics.ACTUAL_DIAGNOSTIC_LINE_ORDER);
+
+    for (int i = 0; i < diagnostics.size(); i++) {
+      Diagnostic<? extends JavaFileObject> diagnostic = diagnostics.get(i);
       if (diagnostic.getKind() != DIAGNOSTIC_KIND) {
         continue;
       }
@@ -97,7 +101,8 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
     }
 
     private <A extends Annotation> void process(Class<A> annotationType,
-        Set<Element> annotatedElements, Function<? super A, ExpectDiagnostic> mapper) {
+        Set<Element> annotatedElements,
+        Function<? super A, ExpectDiagnostic> mapper) {
       for (Element element : annotatedElements) {
         A annotation = element.getAnnotation(annotationType);
         AnnotationMirror mirror = MoreElements.getAnnotationMirror(element, annotationType).get();
@@ -133,7 +138,8 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
   @AutoValue
   abstract static class DiscoveredAnnotation {
     public static <A extends Annotation> DiscoveredAnnotation create(A originalAnnotation,
-        Function<? super A, ExpectDiagnostic> mapper, @Nullable String enclosingClassName) {
+        Function<? super A, ExpectDiagnostic> mapper,
+        @Nullable String enclosingClassName) {
       return new AutoValue_ExpectDiagnosticProcessor_DiscoveredAnnotation(originalAnnotation,
           mapper.apply(originalAnnotation), enclosingClassName);
     }

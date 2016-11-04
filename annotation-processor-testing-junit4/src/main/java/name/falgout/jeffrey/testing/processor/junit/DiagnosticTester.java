@@ -1,12 +1,14 @@
 package name.falgout.jeffrey.testing.processor.junit;
 
 import static name.falgout.jeffrey.testing.processor.ActualDiagnostics.getSourceFile;
+import static name.falgout.jeffrey.testing.processor.ExpectedDiagnostics.getExpectedDiagnostics;
 import static org.junit.Assert.assertThat;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 import javax.tools.Diagnostic;
@@ -23,104 +25,66 @@ import org.junit.runners.model.InitializationError;
 
 import name.falgout.jeffrey.testing.processor.ActualDiagnostics;
 import name.falgout.jeffrey.testing.processor.ExpectedDiagnostic;
-import name.falgout.jeffrey.testing.processor.ExpectedDiagnostics;
 
 public final class DiagnosticTester extends Runner {
-  private final List<ExpectedDiagnosticOrRunner> expectedDiagnostics;
-  private final Queue<Diagnostic<? extends JavaFileObject>> actualDiagnostics;
-  private final boolean isRoot;
-
+  private final Class<?> testClass;
+  private final List<ExpectedDiagnostic<?>> expectedDiagnostics;
+  private final Map<ExpectedDiagnostic<?>, Description> descriptions;
   private final Description description;
 
   public DiagnosticTester(Class<?> testClass) throws InitializationError {
-    this(testClass, getExpectedDiagnostics(testClass), getActualDiagnostics(testClass), true);
-  }
-
-  private static List<ExpectedDiagnostic<?>> getExpectedDiagnostics(Class<?> testClass)
-      throws InitializationError {
     try {
-      return ExpectedDiagnostics.getExpectedDiagnostics(getSourceFile(testClass));
+      this.testClass = testClass;
+      expectedDiagnostics = getExpectedDiagnostics(getSourceFile(testClass));
+      descriptions = new LinkedHashMap<>();
+      description = createDescription(testClass, expectedDiagnostics, descriptions);
     } catch (IllegalArgumentException e) {
       throw new InitializationError(
           e.getMessage() + ": The test directory should also be a testResource");
     }
   }
 
-  private static Queue<Diagnostic<? extends JavaFileObject>> getActualDiagnostics(
-      Class<?> testClass) throws InitializationError {
-    try {
-      return new LinkedList<>(ActualDiagnostics.getActualDiagnostics(testClass));
-    } catch (InvocationTargetException e) {
-      throw new InitializationError(e.getCause());
-    } catch (Throwable e) {
-      throw new InitializationError(e);
+  private Description createDescription(Class<?> root,
+      List<ExpectedDiagnostic<?>> expectedDiagnostics,
+      Map<ExpectedDiagnostic<?>, Description> descriptions) {
+    Map<String, Description> suites = new LinkedHashMap<>();
+    Description rootDescription = Description.createSuiteDescription(root);
+    suites.put(root.getName(), rootDescription);
+
+    for (ExpectedDiagnostic<?> expectedDiagnostic : expectedDiagnostics) {
+      Description suite = suites.computeIfAbsent(expectedDiagnostic.getEnclosingClassName(),
+          className -> createSuite(className, suites));
+      Description leaf =
+          Description.createTestDescription(expectedDiagnostic.getEnclosingClassName(),
+              expectedDiagnostic.getExpectDiagnostic().testName());
+
+      suite.addChild(leaf);
+      descriptions.put(expectedDiagnostic, leaf);
     }
+    return rootDescription;
   }
 
-  private DiagnosticTester(Class<?> testClass, List<ExpectedDiagnostic<?>> expectedDiagnostics,
-      Queue<Diagnostic<? extends JavaFileObject>> actualDiagnostics, boolean isRoot)
-      throws InitializationError {
-    this.expectedDiagnostics = new ArrayList<>();
-    this.actualDiagnostics = actualDiagnostics;
-    this.isRoot = isRoot;
+  private Description createSuite(String className, Map<String, Description> suites) {
+    try {
+      Class<?> clazz = Class.forName(className);
+      Description returnValue = Description.createSuiteDescription(clazz);
 
-    description = Description.createSuiteDescription(testClass);
-    for (int i = 0; i < expectedDiagnostics.size(); i++) {
-      ExpectedDiagnostic<?> diagnostic = expectedDiagnostics.get(i);
-      if (testClass.getName().equals(diagnostic.getEnclosingClassName())) {
-        Description childDescription = Description.createTestDescription(testClass,
-            diagnostic.getExpectDiagnostic().testName());
-        description.addChild(childDescription);
+      Description suite = returnValue;
+      Class<?> enclosing = clazz.getEnclosingClass();
+      while (!suites.containsKey(enclosing.getName())) {
+        Description superSuite = Description.createSuiteDescription(enclosing);
+        suites.put(enclosing.getName(), superSuite);
+        superSuite.addChild(suite);
 
-        this.expectedDiagnostics.add(new ExpectedDiagnosticOrRunner() {
-          @Override
-          public void run(RunNotifier notifier) {
-            EachTestNotifier each = new EachTestNotifier(notifier, childDescription);
-            each.fireTestStarted();
-            try {
-              assertThat(actualDiagnostics.poll(), diagnostic.asMatcher());
-            } catch (StoppedByUserException e) {
-              throw e;
-            } catch (AssumptionViolatedException e) {
-              each.addFailedAssumption(e);
-            } catch (Throwable e) {
-              each.addFailure(e);
-            } finally {
-              each.fireTestFinished();
-            }
-          }
-
-          @Override
-          public Description getDescription() {
-            return childDescription;
-          }
-        });
-      } else {
-        int j = i + 1;
-        for (; j < expectedDiagnostics.size() && !expectedDiagnostics.get(j)
-            .getEnclosingClassName()
-            .equals(testClass.getName()); j++) {}
-        try {
-          DiagnosticTester nestedRunner = new DiagnosticTester(diagnostic.getEnclosingClass(),
-              expectedDiagnostics.subList(i, j), actualDiagnostics, false);
-          description.addChild(nestedRunner.getDescription());
-          this.expectedDiagnostics.add(new ExpectedDiagnosticOrRunner() {
-            @Override
-            public void run(RunNotifier notifier) {
-              nestedRunner.run(notifier);
-            }
-
-            @Override
-            public Description getDescription() {
-              return nestedRunner.getDescription();
-            }
-          });
-        } catch (ClassNotFoundException e) {
-          throw new InitializationError(e);
-        }
-
-        i = j;
+        suite = superSuite;
+        enclosing = enclosing.getEnclosingClass();
       }
+
+      suites.get(enclosing.getName()).addChild(suite);
+
+      return returnValue;
+    } catch (ClassNotFoundException e) {
+      throw new AssertionError(e);
     }
   }
 
@@ -131,19 +95,35 @@ public final class DiagnosticTester extends Runner {
 
   @Override
   public void run(RunNotifier notifier) {
-    for (ExpectedDiagnosticOrRunner r : expectedDiagnostics) {
-      r.run(notifier);
+    try {
+      Queue<Diagnostic<? extends JavaFileObject>> actualDiagnostics =
+          new LinkedList<>(ActualDiagnostics.getActualDiagnostics(testClass));
+
+      for (ExpectedDiagnostic<?> expected : expectedDiagnostics) {
+        Description desc = descriptions.get(expected);
+        EachTestNotifier each = new EachTestNotifier(notifier, desc);
+        each.fireTestStarted();
+        try {
+          assertThat(actualDiagnostics.poll(), expected.asMatcher());
+        } catch (StoppedByUserException e) {
+          throw e;
+        } catch (AssumptionViolatedException e) {
+          each.addFailedAssumption(e);
+        } catch (Throwable e) {
+          each.addFailure(e);
+        } finally {
+          each.fireTestFinished();
+        }
+      }
+
+      if (!actualDiagnostics.isEmpty()) {
+        notifier.fireTestFailure(new Failure(getDescription(), new AssertionError(
+            actualDiagnostics.size() + " unmatched diagnostics: " + actualDiagnostics)));
+      }
+    } catch (InstantiationException | IllegalAccessException | NoSuchMethodException e) {
+      notifier.fireTestFailure(new Failure(getDescription(), e));
+    } catch (InvocationTargetException e) {
+      notifier.fireTestFailure(new Failure(getDescription(), e.getCause()));
     }
-
-    if (isRoot && !actualDiagnostics.isEmpty()) {
-      notifier.fireTestFailure(new Failure(getDescription(), new AssertionError(
-          actualDiagnostics.size() + " unmatched diagnostics: " + actualDiagnostics)));
-    }
-  }
-
-  private interface ExpectedDiagnosticOrRunner {
-    Description getDescription();
-
-    void run(RunNotifier notifier);
   }
 }

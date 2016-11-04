@@ -16,7 +16,7 @@ import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 
 public final class ActualDiagnostics {
-  private static final Comparator<Diagnostic<?>> ACTUAL_DIAGNOSTIC_LINE_ORDER =
+  static final Comparator<Diagnostic<?>> ACTUAL_DIAGNOSTIC_LINE_ORDER =
       Comparator.comparing(Diagnostic<?>::getLineNumber).thenComparing(Diagnostic::getKind);
 
   private ActualDiagnostics() {}
