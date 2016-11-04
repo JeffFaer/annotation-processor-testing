@@ -1,46 +1,48 @@
 package name.falgout.jeffrey.testing.processor;
 
-import static com.google.testing.compile.CompilationSubject.assertThat;
+import static name.falgout.jeffrey.testing.processor.DiagnosticMatchers.hasMessage;
+import static name.falgout.jeffrey.testing.processor.DiagnosticMatchers.hasSource;
+import static name.falgout.jeffrey.testing.processor.DiagnosticMatchers.is;
+import static name.falgout.jeffrey.testing.processor.DiagnosticMatchers.isOnLine;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.describedAs;
 
+import java.lang.annotation.Annotation;
 import java.util.regex.Pattern;
 
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
+import org.hamcrest.Matcher;
+
 import com.google.auto.value.AutoValue;
-import com.google.testing.compile.Compilation;
-import com.google.testing.compile.CompilationSubject.DiagnosticInFile;
 
 @AutoValue
-public abstract class ExpectedDiagnostic {
-  protected ExpectedDiagnostic() {}
+public abstract class ExpectedDiagnostic<A extends Annotation> {
+  public abstract ExpectDiagnostic getExpectDiagnostic();
 
-  public abstract Diagnostic.Kind getKind();
+  public abstract A getOriginalAnnotation();
 
-  public abstract Pattern getMessageMatcher();
+  public abstract JavaFileObject getOriginalSource();
 
-  public abstract JavaFileObject getSource();
+  public abstract long getOriginalLineNumber();
 
-  public abstract long getLineNumber();
+  public final long getExpectedLineNumber() {
+    return getOriginalLineNumber() + getExpectDiagnostic().lineOffset();
+  }
 
-  public abstract String getTestName();
-
-  public final void checkCompilation(Compilation compilation) {
-    DiagnosticInFile inFile;
-    switch (getKind()) {
-      case ERROR:
-        inFile = assertThat(compilation).hadErrorContainingMatch(getMessageMatcher());
-        break;
-      case WARNING:
-        inFile = assertThat(compilation).hadWarningContainingMatch(getMessageMatcher());
-        break;
-      case NOTE:
-        inFile = assertThat(compilation).hadNoteContainingMatch(getMessageMatcher());
-        break;
-      default:
-        throw new UnsupportedOperationException(getKind().toString());
+  public final Matcher<? super Diagnostic<? extends JavaFileObject>> asMatcher() {
+    Matcher<? super Diagnostic<? extends JavaFileObject>> messageMatcher;
+    if (getExpectDiagnostic().regex()) {
+      messageMatcher = hasMessage(Pattern.compile(getExpectDiagnostic().message()));
+    } else {
+      messageMatcher = hasMessage(getExpectDiagnostic().message());
     }
+    Matcher<? super Diagnostic<? extends JavaFileObject>> matcher =
+        allOf(hasSource(getOriginalSource()), isOnLine(getExpectedLineNumber()), messageMatcher,
+            is(getExpectDiagnostic().value()));
 
-    inFile.inFile(getSource()).onLine(getLineNumber());
+    return describedAs(String.format("%s:%d\n%s", getOriginalSource().getName(),
+        getOriginalLineNumber(), getOriginalAnnotation()), matcher);
   }
 }

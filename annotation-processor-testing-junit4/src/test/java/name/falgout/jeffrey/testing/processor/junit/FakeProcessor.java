@@ -12,25 +12,29 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.function.Function;
 
+import javax.annotation.processing.SupportedSourceVersion;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 
 import com.google.auto.common.BasicAnnotationProcessor;
 import com.google.auto.common.MoreElements;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 public final class FakeProcessor extends BasicAnnotationProcessor {
   @Retention(SOURCE)
   @Target({TYPE, METHOD, PARAMETER})
   public @interface Warning {
-    String value() default "abcd";
+    String value() default "";
   }
 
   @Retention(SOURCE)
   @Target({TYPE, METHOD, PARAMETER})
   public @interface Error {
-    String value() default "abcd";
+    String value() default "";
   }
 
   public FakeProcessor() {}
@@ -40,7 +44,7 @@ public final class FakeProcessor extends BasicAnnotationProcessor {
     return Collections.singleton(new ProcessingStep() {
       @Override
       public Set<? extends Class<? extends Annotation>> annotations() {
-        return Collections.singleton(Error.class);
+        return ImmutableSet.of(Error.class, Warning.class);
       }
 
       @Override
@@ -55,8 +59,7 @@ public final class FakeProcessor extends BasicAnnotationProcessor {
       }
 
       private <A extends Annotation> void printMessages(Class<A> annotationType,
-          Set<? extends Element> elements,
-          Diagnostic.Kind kind,
+          Set<? extends Element> elements, Diagnostic.Kind kind,
           Function<? super A, String> value) {
         for (Element element : elements) {
           A annotation = element.getAnnotation(annotationType);

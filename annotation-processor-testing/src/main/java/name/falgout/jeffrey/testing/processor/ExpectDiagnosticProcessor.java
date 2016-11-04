@@ -1,6 +1,5 @@
 package name.falgout.jeffrey.testing.processor;
 
-import static java.util.function.Function.identity;
 import static javax.lang.model.SourceVersion.RELEASE_8;
 
 import java.lang.annotation.Annotation;
@@ -12,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.element.AnnotationMirror;
@@ -26,19 +24,19 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.testing.compile.Compilation;
 
-import name.falgout.jeffrey.testing.processor.AutoValue_ExpectedDiagnostic;
-
 @SupportedSourceVersion(RELEASE_8)
 final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
   private static final Diagnostic.Kind DIAGNOSTIC_KIND = Diagnostic.Kind.NOTE;
-  private final Map<UUID, ExpectDiagnostic> expectedDiagnostics;
+  private final Map<UUID, Annotation> expectedDiagnostics;
+  private final Map<Annotation, ExpectDiagnostic> mapped;
 
   ExpectDiagnosticProcessor() {
     expectedDiagnostics = new LinkedHashMap<>();
+    mapped = new LinkedHashMap<>();
   }
 
-  public List<ExpectedDiagnostic> getExpectedDiagnostics(Compilation compilation) {
-    List<ExpectedDiagnostic> expectations = new ArrayList<>();
+  public List<ExpectedDiagnostic<?>> getExpectedDiagnostics(Compilation compilation) {
+    List<ExpectedDiagnostic<?>> expectations = new ArrayList<>();
     for (int i = 0; i < compilation.diagnostics().size(); i++) {
       Diagnostic<? extends JavaFileObject> diagnostic = compilation.diagnostics().get(i);
       if (diagnostic.getKind() != DIAGNOSTIC_KIND) {
@@ -47,23 +45,27 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
 
       try {
         UUID id = UUID.fromString(diagnostic.getMessage(null));
-        ExpectDiagnostic expected = expectedDiagnostics.get(id);
 
-        Pattern message = Pattern
-            .compile(expected.regex() ? expected.message() : Pattern.quote(expected.message()));
-        JavaFileObject source = diagnostic.getSource();
-        long actualLine = diagnostic.getLineNumber() + expected.lineOffset();
-        String testName = expected.testName();
+        Annotation originalAnnotation = expectedDiagnostics.get(id);
+        ExpectDiagnostic expectDiagnostic = mapped.get(originalAnnotation);
+        JavaFileObject originalSource = diagnostic.getSource();
+        long originalLineNumber = diagnostic.getLineNumber();
+
+        String testName = expectDiagnostic.testName();
         if (testName.isEmpty()) {
-          testName = String.format("%s#%d@%d", expected.value(), i + 1, diagnostic.getLineNumber());
+          testName = getDefaultTestName(expectDiagnostic.value(), i + 1, originalLineNumber);
         }
 
-        expectations.add(new AutoValue_ExpectedDiagnostic(expected.value(), message, source,
-            actualLine, testName));
+        expectations.add(new AutoValue_ExpectedDiagnostic<>(expectDiagnostic, originalAnnotation,
+            originalSource, originalLineNumber));
       } catch (IllegalArgumentException e) {}
     }
 
     return expectations;
+  }
+
+  private String getDefaultTestName(Diagnostic.Kind kind, int index, long lineNumber) {
+    return String.format("%s#%d@%d", kind, index, lineNumber);
   }
 
   @Override
@@ -82,7 +84,8 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
     @Override
     public Set<Element> process(
         SetMultimap<Class<? extends Annotation>, Element> elementsByAnnotation) {
-      process(ExpectDiagnostic.class, elementsByAnnotation.get(ExpectDiagnostic.class), identity());
+      process(ExpectDiagnostic.class, elementsByAnnotation.get(ExpectDiagnostic.class),
+          Function.identity());
       process(ExpectError.class, elementsByAnnotation.get(ExpectError.class),
           ExpectedDiagnostics::createExpectDiagnostic);
 
@@ -90,17 +93,15 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
     }
 
     private <A extends Annotation> void process(Class<A> annotationType,
-        Set<Element> annotatedElements,
-        Function<? super A, ExpectDiagnostic> diagnosticMapper) {
+        Set<Element> annotatedElements, Function<? super A, ExpectDiagnostic> mapper) {
       for (Element element : annotatedElements) {
         A annotation = element.getAnnotation(annotationType);
         AnnotationMirror mirror = MoreElements.getAnnotationMirror(element, annotationType).get();
 
-        ExpectDiagnostic diagnostic = diagnosticMapper.apply(annotation);
         UUID id = UUID.randomUUID();
-
+        expectedDiagnostics.put(id, annotation);
+        mapped.put(annotation, mapper.apply(annotation));
         processingEnv.getMessager().printMessage(DIAGNOSTIC_KIND, id.toString(), element, mirror);
-        expectedDiagnostics.put(id, diagnostic);
       }
     }
   }

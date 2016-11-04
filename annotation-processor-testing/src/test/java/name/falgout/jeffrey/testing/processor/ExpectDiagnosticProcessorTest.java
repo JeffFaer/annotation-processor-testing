@@ -18,13 +18,14 @@ public class ExpectDiagnosticProcessorTest {
 
   @Test
   public void expectations() {
-    List<ExpectedDiagnostic> expected = ExpectedDiagnostics
+    List<ExpectedDiagnostic<?>> expected = ExpectedDiagnostics
         .getExpectedDiagnostics(JavaFileObjects.forResource("expect/Expectations.java"));
     assertThat(expected).hasSize(1);
 
-    ExpectedDiagnostic diagnostic = expected.get(0);
-    assertThat(diagnostic.getKind()).isSameAs(Diagnostic.Kind.ERROR);
-    assertThat(diagnostic.getLineNumber()).isEqualTo(9);
-    assertTrue(diagnostic.getMessageMatcher().matcher("foo").matches());
+    ExpectedDiagnostic<?> diagnostic = expected.get(0);
+    assertThat(diagnostic.getExpectDiagnostic().value()).isSameAs(Diagnostic.Kind.ERROR);
+    assertThat(diagnostic.getExpectedLineNumber()).isEqualTo(9);
+    assertThat(diagnostic.getOriginalLineNumber()).isEqualTo(4);
+    assertTrue(diagnostic.getExpectDiagnostic().message().equals("foo"));
   }
 }

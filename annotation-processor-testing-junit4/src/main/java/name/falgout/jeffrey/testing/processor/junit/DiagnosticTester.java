@@ -1,9 +1,14 @@
 package name.falgout.jeffrey.testing.processor.junit;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
-import javax.annotation.processing.Processor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
 import org.junit.AssumptionViolatedException;
@@ -12,66 +17,52 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.Statement;
 
-import com.google.testing.compile.Compilation;
-import com.google.testing.compile.Compiler;
-import com.google.testing.compile.JavaFileObjects;
-
+import name.falgout.jeffrey.testing.processor.ActualDiagnostics;
 import name.falgout.jeffrey.testing.processor.ExpectedDiagnostic;
 import name.falgout.jeffrey.testing.processor.ExpectedDiagnostics;
 
-public final class DiagnosticTester extends ParentRunner<ExpectedDiagnostic> {
+public final class DiagnosticTester extends ParentRunner<ExpectedDiagnostic<?>> {
   private final JavaFileObject sourceFile;
-  private final List<? extends Processor> processors;
-
-  private final Object lock = new Object();
-  private volatile Compilation compilation;
+  private final Queue<Diagnostic<? extends JavaFileObject>> diagnostics;
 
   public DiagnosticTester(Class<?> testClass) throws InitializationError {
     super(testClass);
 
     try {
-      String className = testClass.getName().replace('.', '/');
-      sourceFile = JavaFileObjects.forResource(className + ".java");
+      sourceFile = ActualDiagnostics.getSourceFile(testClass);
     } catch (IllegalArgumentException e) {
       throw new InitializationError(
-          e.getMessage() + ": The test directory should also be a resource folder.");
+          e.getMessage() + ": The test directory should also be a testResource");
     }
 
     try {
-      processors = ExpectedDiagnostics.createProcessors(testClass);
+      diagnostics = new LinkedList<>(ActualDiagnostics.getActualDiagnostics(testClass));
     } catch (InvocationTargetException e) {
       throw new InitializationError(e.getCause());
     } catch (Throwable e) {
       throw new InitializationError(e);
     }
-
-    if (processors.isEmpty()) {
-      throw new InitializationError(
-          "Did you forget to annotate " + testClass.getSimpleName() + " with @UseProcessor?");
-    }
   }
 
   @Override
-  protected List<ExpectedDiagnostic> getChildren() {
+  protected List<ExpectedDiagnostic<?>> getChildren() {
     return ExpectedDiagnostics.getExpectedDiagnostics(sourceFile);
   }
 
   @Override
-  protected Description describeChild(ExpectedDiagnostic child) {
-    return Description.createTestDescription(getTestClass().getJavaClass(), child.getTestName());
+  protected Description describeChild(ExpectedDiagnostic<?> child) {
+    return Description.createTestDescription(getTestClass().getJavaClass(),
+        child.getExpectDiagnostic().testName());
   }
 
   @Override
-  protected void runChild(ExpectedDiagnostic child, RunNotifier notifier) {
+  protected void runChild(ExpectedDiagnostic<?> child, RunNotifier notifier) {
     Description description = describeChild(child);
     notifier.fireTestStarted(description);
     try {
-      if (compilation == null) {
-        runCompilation();
-      }
-
-      child.checkCompilation(compilation);
+      assertThat(diagnostics.poll(), child.asMatcher());
     } catch (AssumptionViolatedException e) {
       notifier.fireTestAssumptionFailed(new Failure(description, e));
     } catch (Throwable e) {
@@ -81,21 +72,18 @@ public final class DiagnosticTester extends ParentRunner<ExpectedDiagnostic> {
     }
   }
 
-  private void runCompilation() {
-    if (compilation != null) {
-      return;
-    }
+  @Override
+  protected Statement withAfterClasses(Statement statement) {
+    Statement superStatement = super.withAfterClasses(statement);
+    return new Statement() {
+      @Override
+      public void evaluate() throws Throwable {
+        superStatement.evaluate();
 
-    synchronized (lock) {
-      if (compilation != null) {
-        return;
+        if (!diagnostics.isEmpty()) {
+          fail(diagnostics.size() + " unmatched diagnostics: " + diagnostics);
+        }
       }
-
-      compilation = getCompiler().compile(sourceFile);
-    }
-  }
-
-  private Compiler getCompiler() {
-    return Compiler.javac().withProcessors(processors);
+    };
   }
 }

@@ -5,6 +5,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.junit.Test;
 import org.junit.runner.Description;
@@ -16,8 +18,6 @@ import org.junit.runners.model.InitializationError;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import name.falgout.jeffrey.testing.processor.junit.DiagnosticTester;
-
 @RunWith(MockitoJUnitRunner.class)
 public class DiagnosticTesterTest {
   @Mock RunNotifier runNotifier;
@@ -27,13 +27,21 @@ public class DiagnosticTesterTest {
     Runner runner = new DiagnosticTester(DiagnosticTesterTestClass.class);
     runner.run(runNotifier);
 
-    for (String name : Arrays.asList("1", "2", "3", "4")) {
+    for (String name : Arrays.asList("sameLine", "nextLine", "wrongMessage", "wrongKind",
+        "wrongLine")) {
       verify(runNotifier).fireTestStarted(named(name));
       verify(runNotifier).fireTestFinished(named(name));
     }
 
-    verify(runNotifier).fireTestFailure(failedWith("3", AssertionError.class));
-    verify(runNotifier).fireTestFailure(failedWith("4", AssertionError.class));
+    verify(runNotifier)
+        .fireTestFailure(failedWith("wrongMessage", t -> t.getMessage().contains("was \"\"")));
+    verify(runNotifier).fireTestFailure(
+        failedWith("wrongKind", t -> t.getMessage().contains("<ERROR> was <WARNING>")));
+    verify(runNotifier)
+        .fireTestFailure(failedWith("wrongLine", t -> t.getMessage().contains("<26L> was <27L>")));
+
+    verify(runNotifier)
+        .fireTestFailure(failedWith(null, t -> t.getMessage().contains("unmatched diagnostics")));
 
     verifyNoMoreInteractions(runNotifier);
   }
@@ -42,8 +50,8 @@ public class DiagnosticTesterTest {
     return argThat(d -> d.getMethodName().equals(name));
   }
 
-  private static Failure failedWith(String name, Class<? extends Throwable> exceptionClass) {
-    return argThat(f -> f.getDescription().getMethodName().equals(name)
-        && exceptionClass.isInstance(f.getException()));
+  private static Failure failedWith(String name, Predicate<? super Throwable> throwable) {
+    return argThat(f -> Objects.equals(f.getDescription().getMethodName(), name)
+        && f.getException() instanceof AssertionError && throwable.test(f.getException()));
   }
 }

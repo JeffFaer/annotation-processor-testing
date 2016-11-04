@@ -1,4 +1,4 @@
-import name.falgout.jeffrey.processor.testing.ExpectError;
+import name.falgout.jeffrey.testing.processor.ExpectError;
 
 public class Expectations {
   @ExpectError(value = "foo", lineOffset = 5)
