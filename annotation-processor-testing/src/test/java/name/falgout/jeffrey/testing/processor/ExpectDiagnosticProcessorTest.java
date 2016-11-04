@@ -1,4 +1,4 @@
-package name.falgout.jeffrey.processor.testing;
+package name.falgout.jeffrey.testing.processor;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.*;
@@ -10,6 +10,9 @@ import javax.tools.Diagnostic;
 import org.junit.Test;
 
 import com.google.testing.compile.JavaFileObjects;
+
+import name.falgout.jeffrey.testing.processor.ExpectedDiagnostic;
+import name.falgout.jeffrey.testing.processor.ExpectedDiagnostics;
 
 public class ExpectDiagnosticProcessorTest {
 

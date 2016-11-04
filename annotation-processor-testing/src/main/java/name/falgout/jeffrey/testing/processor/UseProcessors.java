@@ -1,4 +1,4 @@
-package name.falgout.jeffrey.processor.testing;
+package name.falgout.jeffrey.testing.processor;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;

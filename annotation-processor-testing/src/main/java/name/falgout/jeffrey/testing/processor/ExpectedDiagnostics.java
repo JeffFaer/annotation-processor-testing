@@ -1,4 +1,4 @@
-package name.falgout.jeffrey.processor.testing;
+package name.falgout.jeffrey.testing.processor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -13,6 +13,8 @@ import javax.tools.JavaFileObject;
 import com.google.auto.value.AutoAnnotation;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
+
+import name.falgout.jeffrey.testing.processor.AutoAnnotation_ExpectedDiagnostics_createExpectDiagnostic;
 
 public final class ExpectedDiagnostics {
   private ExpectedDiagnostics() {}

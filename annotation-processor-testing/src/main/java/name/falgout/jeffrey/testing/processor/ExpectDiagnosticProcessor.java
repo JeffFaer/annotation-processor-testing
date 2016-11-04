@@ -1,4 +1,4 @@
-package name.falgout.jeffrey.processor.testing;
+package name.falgout.jeffrey.testing.processor;
 
 import static java.util.function.Function.identity;
 import static javax.lang.model.SourceVersion.RELEASE_8;
@@ -25,6 +25,8 @@ import com.google.auto.common.MoreElements;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.testing.compile.Compilation;
+
+import name.falgout.jeffrey.testing.processor.AutoValue_ExpectedDiagnostic;
 
 @SupportedSourceVersion(RELEASE_8)
 final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {

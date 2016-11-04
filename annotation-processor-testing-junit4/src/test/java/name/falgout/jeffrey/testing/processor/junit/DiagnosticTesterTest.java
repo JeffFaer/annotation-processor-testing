@@ -1,4 +1,4 @@
-package name.falgout.jeffrey.processing.testing.junit;
+package name.falgout.jeffrey.testing.processor.junit;
 
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
@@ -15,6 +15,8 @@ import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.InitializationError;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import name.falgout.jeffrey.testing.processor.junit.DiagnosticTester;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DiagnosticTesterTest {

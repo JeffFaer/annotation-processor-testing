@@ -1,7 +1,7 @@
-package name.falgout.jeffrey.processing.testing.junit;
+package name.falgout.jeffrey.testing.processor.junit;
 
-import name.falgout.jeffrey.processor.testing.ExpectError;
-import name.falgout.jeffrey.processor.testing.UseProcessor;
+import name.falgout.jeffrey.testing.processor.ExpectError;
+import name.falgout.jeffrey.testing.processor.UseProcessor;
 
 @UseProcessor(FakeProcessor.class)
 public class DiagnosticTesterTestClass {

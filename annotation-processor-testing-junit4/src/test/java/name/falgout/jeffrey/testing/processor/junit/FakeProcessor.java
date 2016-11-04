@@ -1,4 +1,4 @@
-package name.falgout.jeffrey.processing.testing.junit;
+package name.falgout.jeffrey.testing.processor.junit;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;

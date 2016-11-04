@@ -1,4 +1,4 @@
-package name.falgout.jeffrey.processor.testing;
+package name.falgout.jeffrey.testing.processor;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
@@ -16,12 +16,16 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import javax.tools.Diagnostic;
+
 @Documented
 @Retention(SOURCE)
 @Target({ANNOTATION_TYPE, CONSTRUCTOR, FIELD, LOCAL_VARIABLE, METHOD, PACKAGE, PARAMETER, TYPE,
     TYPE_PARAMETER, TYPE_USE})
-public @interface ExpectError {
-  String value() default "";
+public @interface ExpectDiagnostic {
+  Diagnostic.Kind value();
+
+  String message() default "";
 
   boolean regex() default false;
 

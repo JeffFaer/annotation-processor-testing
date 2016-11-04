@@ -1,4 +1,4 @@
-package name.falgout.jeffrey.processing.testing.junit;
+package name.falgout.jeffrey.testing.processor.junit;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -17,8 +17,8 @@ import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
 import com.google.testing.compile.JavaFileObjects;
 
-import name.falgout.jeffrey.processor.testing.ExpectedDiagnostic;
-import name.falgout.jeffrey.processor.testing.ExpectedDiagnostics;
+import name.falgout.jeffrey.testing.processor.ExpectedDiagnostic;
+import name.falgout.jeffrey.testing.processor.ExpectedDiagnostics;
 
 public final class DiagnosticTester extends ParentRunner<ExpectedDiagnostic> {
   private final JavaFileObject sourceFile;

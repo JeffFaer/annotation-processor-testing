@@ -1,4 +1,4 @@
-package name.falgout.jeffrey.processor.testing;
+package name.falgout.jeffrey.testing.processor;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 
