@@ -29,13 +29,10 @@
   </dependencies>
 
   <build>
-    <resources>
-      <resource>
+    <testResources>
+      <testResource>
         <directory>src/test/java/</directory>
-        <includes>
-          <include>**</include>
-        </includes>
-      </resource>
-    </resources>
+      </testResource>
+    </testResources>
   </build>
 </project>
