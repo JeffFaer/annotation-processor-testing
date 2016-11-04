@@ -1,11 +1,8 @@
 package name.falgout.jeffrey.testing.processor.junit;
 
-import org.junit.runner.RunWith;
-
 import name.falgout.jeffrey.testing.processor.ExpectError;
 import name.falgout.jeffrey.testing.processor.UseProcessor;
 
-@RunWith(DiagnosticTester.class)
 @UseProcessor(FakeProcessor.class)
 public class DiagnosticTesterTestClass {
   @ExpectError(value = "foo", testName = "sameLine") @FakeProcessor.Error("foo")
