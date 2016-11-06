@@ -111,7 +111,8 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
         AnnotationMirror mirror = MoreElements.getAnnotationMirror(element, annotationType).get();
 
         Optional<TypeElement> enclosingTypeElement = findEnclosingTypeElement(element);
-        @Nullable String binaryName = enclosingTypeElement.map(this::getBinaryName).orElse(null);
+        @Nullable String binaryName = enclosingTypeElement
+            .map(processingEnv.getElementUtils()::getBinaryName).map(Object::toString).orElse(null);
 
         UUID id = UUID.randomUUID();
         expectedDiagnostics.put(id, DiscoveredAnnotation.create(annotation, mapper, binaryName));
@@ -133,12 +134,6 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
 
     private boolean isEmpty(Name name) {
       return name == null || name.length() == 0;
-    }
-
-    private String getBinaryName(TypeElement typeElement) {
-      return findEnclosingTypeElement(typeElement.getEnclosingElement())
-          .map(type -> getBinaryName(type) + "$" + typeElement.getSimpleName())
-          .orElseGet(() -> typeElement.getQualifiedName().toString());
     }
   }
 
