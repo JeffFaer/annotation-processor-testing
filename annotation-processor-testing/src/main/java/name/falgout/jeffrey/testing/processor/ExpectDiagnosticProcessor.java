@@ -17,6 +17,7 @@ import javax.annotation.Nullable;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
@@ -43,30 +44,33 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
         new ArrayList<>(compilation.diagnostics());
     diagnostics.sort(ActualDiagnostics.ACTUAL_DIAGNOSTIC_LINE_ORDER);
 
-    for (int i = 0; i < diagnostics.size(); i++) {
-      Diagnostic<? extends JavaFileObject> diagnostic = diagnostics.get(i);
+    for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics) {
       if (diagnostic.getKind() != DIAGNOSTIC_KIND) {
         continue;
       }
 
+      UUID id;
       try {
-        UUID id = UUID.fromString(diagnostic.getMessage(null));
+        id = UUID.fromString(diagnostic.getMessage(null));
+      } catch (IllegalArgumentException e) {
+        // The message was not a UUID.
+        continue;
+      }
 
-        DiscoveredAnnotation discovered = expectedDiagnostics.get(id);
-        ExpectDiagnostic expectDiagnostic = discovered.getExpectDiagnostic();
-        JavaFileObject originalSource = diagnostic.getSource();
-        long originalLineNumber = diagnostic.getLineNumber();
+      DiscoveredAnnotation discovered = expectedDiagnostics.get(id);
+      ExpectDiagnostic expectDiagnostic = discovered.getExpectDiagnostic();
+      long originalLineNumber = diagnostic.getLineNumber();
 
-        String testName = expectDiagnostic.testName();
-        if (testName.isEmpty()) {
-          testName = getDefaultTestName(expectDiagnostic.value(), i + 1, originalLineNumber);
-          expectDiagnostic = ExpectedDiagnostics.replaceTestName(expectDiagnostic, testName);
-        }
+      if (expectDiagnostic.testName().isEmpty()) {
+        String testName = getDefaultTestName(expectDiagnostic.value(), expectations.size() + 1,
+            originalLineNumber);
+        expectDiagnostic = ExpectedDiagnostics.replaceTestName(expectDiagnostic, testName);
+      }
 
-        expectations.add(
-            new AutoValue_ExpectedDiagnostic<>(expectDiagnostic, discovered.getOriginalAnnotation(),
-                originalSource, originalLineNumber, discovered.getEnclosingClassName()));
-      } catch (IllegalArgumentException e) {}
+      ExpectedDiagnostic<?> expectedDiagnostic =
+          new AutoValue_ExpectedDiagnostic<>(expectDiagnostic, discovered.getOriginalAnnotation(),
+              diagnostic.getSource(), originalLineNumber, discovered.getEnclosingClassName());
+      expectations.add(expectedDiagnostic);
     }
 
     return expectations;
@@ -101,8 +105,7 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
     }
 
     private <A extends Annotation> void process(Class<A> annotationType,
-        Set<Element> annotatedElements,
-        Function<? super A, ExpectDiagnostic> mapper) {
+        Set<Element> annotatedElements, Function<? super A, ExpectDiagnostic> mapper) {
       for (Element element : annotatedElements) {
         A annotation = element.getAnnotation(annotationType);
         AnnotationMirror mirror = MoreElements.getAnnotationMirror(element, annotationType).get();
@@ -116,21 +119,25 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
       }
     }
 
-    private Optional<TypeElement> findEnclosingTypeElement(Element element) {
+    private Optional<TypeElement> findEnclosingTypeElement(@Nullable Element element) {
       if (element == null) {
         return Optional.empty();
       }
 
-      if (element instanceof TypeElement && ((TypeElement) element).getQualifiedName() != null) {
+      if (element instanceof TypeElement && !isEmpty(((TypeElement) element).getQualifiedName())) {
         return Optional.of((TypeElement) element);
       }
 
       return findEnclosingTypeElement(element.getEnclosingElement());
     }
 
+    private boolean isEmpty(Name name) {
+      return name == null || name.length() == 0;
+    }
+
     private String getBinaryName(TypeElement typeElement) {
       return findEnclosingTypeElement(typeElement.getEnclosingElement())
-          .map(type -> getBinaryName(type) + "$" + typeElement.getSimpleName().toString())
+          .map(type -> getBinaryName(type) + "$" + typeElement.getSimpleName())
           .orElseGet(() -> typeElement.getQualifiedName().toString());
     }
   }
@@ -138,8 +145,7 @@ final class ExpectDiagnosticProcessor extends BasicAnnotationProcessor {
   @AutoValue
   abstract static class DiscoveredAnnotation {
     public static <A extends Annotation> DiscoveredAnnotation create(A originalAnnotation,
-        Function<? super A, ExpectDiagnostic> mapper,
-        @Nullable String enclosingClassName) {
+        Function<? super A, ExpectDiagnostic> mapper, @Nullable String enclosingClassName) {
       return new AutoValue_ExpectDiagnosticProcessor_DiscoveredAnnotation(originalAnnotation,
           mapper.apply(originalAnnotation), enclosingClassName);
     }

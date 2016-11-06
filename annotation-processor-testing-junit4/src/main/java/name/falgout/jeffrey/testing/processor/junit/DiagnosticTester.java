@@ -1,6 +1,5 @@
 package name.falgout.jeffrey.testing.processor.junit;
 
-import static name.falgout.jeffrey.testing.processor.ActualDiagnostics.getSourceFile;
 import static name.falgout.jeffrey.testing.processor.ExpectedDiagnostics.getExpectedDiagnostics;
 import static org.junit.Assert.assertThat;
 
@@ -33,30 +32,38 @@ public final class DiagnosticTester extends Runner {
   private final Description description;
 
   public DiagnosticTester(Class<?> testClass) throws InitializationError {
+    this.testClass = testClass;
+    expectedDiagnostics = getExpectedDiagnostics(getSourceFile(testClass));
+    descriptions = new LinkedHashMap<>();
+
     try {
-      this.testClass = testClass;
-      expectedDiagnostics = getExpectedDiagnostics(getSourceFile(testClass));
-      descriptions = new LinkedHashMap<>();
       description = createDescription(testClass, expectedDiagnostics, descriptions);
-    } catch (IllegalArgumentException e) {
-      throw new InitializationError(
-          e.getMessage() + ": The test directory should also be a testResource");
+    } catch (ClassNotFoundException e) {
+      throw new InitializationError(e);
     }
   }
 
-  private Description createDescription(Class<?> root,
+  private static JavaFileObject getSourceFile(Class<?> testClass) throws InitializationError {
+    try {
+      return ActualDiagnostics.getSourceFile(testClass);
+    } catch (IllegalArgumentException e) {
+      throw new InitializationError(
+          e.getMessage() + ": The test source should also be a testResource.");
+    }
+  }
+
+  private static Description createDescription(Class<?> root,
       List<ExpectedDiagnostic<?>> expectedDiagnostics,
-      Map<ExpectedDiagnostic<?>, Description> descriptions) {
+      Map<ExpectedDiagnostic<?>, Description> descriptions) throws ClassNotFoundException {
     Map<String, Description> suites = new LinkedHashMap<>();
     Description rootDescription = Description.createSuiteDescription(root);
     suites.put(root.getName(), rootDescription);
 
     for (ExpectedDiagnostic<?> expectedDiagnostic : expectedDiagnostics) {
-      Description suite = suites.computeIfAbsent(expectedDiagnostic.getEnclosingClassName(),
-          className -> createSuite(className, suites));
-      Description leaf =
-          Description.createTestDescription(expectedDiagnostic.getEnclosingClassName(),
-              expectedDiagnostic.getExpectDiagnostic().testName());
+      String enclosingClassName = expectedDiagnostic.getEnclosingClassName();
+      Description suite = createSuite(enclosingClassName, suites);
+      Description leaf = Description.createTestDescription(enclosingClassName,
+          expectedDiagnostic.getExpectDiagnostic().testName());
 
       suite.addChild(leaf);
       descriptions.put(expectedDiagnostic, leaf);
@@ -64,28 +71,22 @@ public final class DiagnosticTester extends Runner {
     return rootDescription;
   }
 
-  private Description createSuite(String className, Map<String, Description> suites) {
-    try {
-      Class<?> clazz = Class.forName(className);
-      Description returnValue = Description.createSuiteDescription(clazz);
-
-      Description suite = returnValue;
-      Class<?> enclosing = clazz.getEnclosingClass();
-      while (!suites.containsKey(enclosing.getName())) {
-        Description superSuite = Description.createSuiteDescription(enclosing);
-        suites.put(enclosing.getName(), superSuite);
-        superSuite.addChild(suite);
-
-        suite = superSuite;
-        enclosing = enclosing.getEnclosingClass();
-      }
-
-      suites.get(enclosing.getName()).addChild(suite);
-
-      return returnValue;
-    } catch (ClassNotFoundException e) {
-      throw new AssertionError(e);
+  private static Description createSuite(String className, Map<String, Description> suites)
+      throws ClassNotFoundException {
+    if (suites.containsKey(className)) {
+      return suites.get(className);
     }
+
+    Class<?> clazz = Class.forName(className);
+    Description child = Description.createSuiteDescription(clazz);
+    suites.put(className, child);
+
+    if (clazz.getEnclosingClass() != null) {
+      Description parent = createSuite(clazz.getEnclosingClass().getName(), suites);
+      parent.addChild(child);
+    }
+
+    return child;
   }
 
   @Override
@@ -95,35 +96,37 @@ public final class DiagnosticTester extends Runner {
 
   @Override
   public void run(RunNotifier notifier) {
+    Queue<Diagnostic<? extends JavaFileObject>> actualDiagnostics;
     try {
-      Queue<Diagnostic<? extends JavaFileObject>> actualDiagnostics =
-          new LinkedList<>(ActualDiagnostics.getActualDiagnostics(testClass));
-
-      for (ExpectedDiagnostic<?> expected : expectedDiagnostics) {
-        Description desc = descriptions.get(expected);
-        EachTestNotifier each = new EachTestNotifier(notifier, desc);
-        each.fireTestStarted();
-        try {
-          assertThat(actualDiagnostics.poll(), expected.asMatcher());
-        } catch (StoppedByUserException e) {
-          throw e;
-        } catch (AssumptionViolatedException e) {
-          each.addFailedAssumption(e);
-        } catch (Throwable e) {
-          each.addFailure(e);
-        } finally {
-          each.fireTestFinished();
-        }
-      }
-
-      if (!actualDiagnostics.isEmpty()) {
-        notifier.fireTestFailure(new Failure(getDescription(), new AssertionError(
-            actualDiagnostics.size() + " unmatched diagnostics: " + actualDiagnostics)));
-      }
+      actualDiagnostics = new LinkedList<>(ActualDiagnostics.getActualDiagnostics(testClass));
     } catch (InstantiationException | IllegalAccessException | NoSuchMethodException e) {
       notifier.fireTestFailure(new Failure(getDescription(), e));
+      return;
     } catch (InvocationTargetException e) {
       notifier.fireTestFailure(new Failure(getDescription(), e.getCause()));
+      return;
+    }
+
+    for (ExpectedDiagnostic<?> expected : expectedDiagnostics) {
+      Description desc = descriptions.get(expected);
+      EachTestNotifier each = new EachTestNotifier(notifier, desc);
+      each.fireTestStarted();
+      try {
+        assertThat(actualDiagnostics.poll(), expected.asMatcher());
+      } catch (StoppedByUserException e) {
+        throw e;
+      } catch (AssumptionViolatedException e) {
+        each.addFailedAssumption(e);
+      } catch (Throwable e) {
+        each.addFailure(e);
+      } finally {
+        each.fireTestFinished();
+      }
+    }
+
+    if (!actualDiagnostics.isEmpty()) {
+      notifier.fireTestFailure(new Failure(getDescription(), new AssertionError(
+          actualDiagnostics.size() + " unmatched diagnostics: " + actualDiagnostics)));
     }
   }
 }
