@@ -61,7 +61,8 @@ public final class DiagnosticTester extends Runner {
 
     for (ExpectedDiagnostic<?> expectedDiagnostic : expectedDiagnostics) {
       String enclosingClassName = expectedDiagnostic.getEnclosingClassName();
-      Description suite = createSuite(enclosingClassName, suites);
+      Description suite =
+          enclosingClassName == null ? rootDescription : createSuite(enclosingClassName, suites);
       Description leaf = Description.createTestDescription(enclosingClassName,
           expectedDiagnostic.getExpectDiagnostic().testName());
 
