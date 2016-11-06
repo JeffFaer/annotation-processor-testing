@@ -28,16 +28,14 @@ import name.falgout.jeffrey.testing.processor.ExpectedDiagnostic;
 public final class DiagnosticTester extends Runner {
   private final Class<?> testClass;
   private final List<ExpectedDiagnostic<?>> expectedDiagnostics;
-  private final Map<ExpectedDiagnostic<?>, Description> descriptions;
   private final Description description;
 
   public DiagnosticTester(Class<?> testClass) throws InitializationError {
     this.testClass = testClass;
     expectedDiagnostics = getExpectedDiagnostics(getSourceFile(testClass));
-    descriptions = new LinkedHashMap<>();
 
     try {
-      description = createDescription(testClass, expectedDiagnostics, descriptions);
+      description = createDescription(testClass, expectedDiagnostics);
     } catch (ClassNotFoundException e) {
       throw new InitializationError(e);
     }
@@ -53,8 +51,7 @@ public final class DiagnosticTester extends Runner {
   }
 
   private static Description createDescription(Class<?> root,
-      List<ExpectedDiagnostic<?>> expectedDiagnostics,
-      Map<ExpectedDiagnostic<?>, Description> descriptions) throws ClassNotFoundException {
+      List<ExpectedDiagnostic<?>> expectedDiagnostics) throws ClassNotFoundException {
     Map<String, Description> suites = new LinkedHashMap<>();
     Description rootDescription = Description.createSuiteDescription(root);
     suites.put(root.getName(), rootDescription);
@@ -63,13 +60,15 @@ public final class DiagnosticTester extends Runner {
       String enclosingClassName = expectedDiagnostic.getEnclosingClassName();
       Description suite =
           enclosingClassName == null ? rootDescription : createSuite(enclosingClassName, suites);
-      Description leaf = Description.createTestDescription(enclosingClassName,
-          expectedDiagnostic.getExpectDiagnostic().testName());
-
-      suite.addChild(leaf);
-      descriptions.put(expectedDiagnostic, leaf);
+      suite.addChild(createDescription(expectedDiagnostic));
     }
     return rootDescription;
+  }
+
+
+  private static Description createDescription(ExpectedDiagnostic<?> expectedDiagnostic) {
+    return Description.createTestDescription(expectedDiagnostic.getEnclosingClassName(),
+        expectedDiagnostic.getExpectDiagnostic().testName());
   }
 
   private static Description createSuite(String className, Map<String, Description> suites)
@@ -79,7 +78,7 @@ public final class DiagnosticTester extends Runner {
     }
 
     Class<?> clazz = Class.forName(className);
-    Description child = Description.createSuiteDescription(clazz);
+    Description child = Description.createSuiteDescription(clazz.getSimpleName());
     suites.put(className, child);
 
     if (clazz.getEnclosingClass() != null) {
@@ -109,7 +108,7 @@ public final class DiagnosticTester extends Runner {
     }
 
     for (ExpectedDiagnostic<?> expected : expectedDiagnostics) {
-      Description desc = descriptions.get(expected);
+      Description desc = createDescription(expected);
       EachTestNotifier each = new EachTestNotifier(notifier, desc);
       each.fireTestStarted();
       try {
