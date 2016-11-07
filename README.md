@@ -1,5 +1,7 @@
 # annotation-processor-testing
 
+[![Maven Central][mvn-img]][mvn-link]
+
 An easier way to determine if your annotation processor is creating the right diagnostics. Create a class with your annotations used incorrectly. Add [`@ExpectError`](annotation-processor-testing/src/main/java/name/falgout/jeffrey/testing/processor/ExpectError.java) to that class to ensure that your diagnostics are correct.
 ```java
 @RunWith(DiagnosticTester.class)
@@ -42,3 +44,6 @@ In order to use the JUnit4 runner, you must include your test sources as a resou
     ...
   </build>
 ```
+
+[mvn-img]: https://maven-badges.herokuapp.com/maven-central/name.falgout.jeffrey.testing/annotation-processor-testing-junit4/badge.svg
+[mvn-link]: https://maven-badges.herokuapp.com/maven-central/name.falgout.jeffrey.testing/annotation-processor-testing-junit4
