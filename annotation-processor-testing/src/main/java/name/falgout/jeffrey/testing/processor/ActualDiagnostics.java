@@ -17,7 +17,8 @@ import com.google.testing.compile.JavaFileObjects;
 
 public final class ActualDiagnostics {
   static final Comparator<Diagnostic<?>> ACTUAL_DIAGNOSTIC_LINE_ORDER =
-      Comparator.comparing(Diagnostic<?>::getLineNumber).thenComparing(Diagnostic::getKind);
+      Comparator.<Diagnostic<?>, Long>comparing(Diagnostic::getLineNumber)
+          .thenComparing(Diagnostic::getKind);
 
   private ActualDiagnostics() {}
 
@@ -61,7 +62,7 @@ public final class ActualDiagnostics {
     }
 
     Compilation compilation =
-        Compiler.javac().withProcessors(processors).compile(getSourceFile(clazz));
+        compiler.withProcessors(processors).compile(getSourceFile(clazz));
     List<Diagnostic<? extends JavaFileObject>> diagnostics =
         new ArrayList<>(compilation.diagnostics());
     diagnostics.sort(ACTUAL_DIAGNOSTIC_LINE_ORDER);
