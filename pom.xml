@@ -8,6 +8,7 @@
   <modules>
     <module>annotation-processor-testing</module>
     <module>annotation-processor-testing-junit4</module>
+    <module>annotation-processor-testing-tests</module>
   </modules>
 
   <properties>
@@ -47,12 +48,20 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- Project dependencies -->
       <dependency>
-        <groupId>com.google.auto.value</groupId>
-        <artifactId>auto-value</artifactId>
-        <version>1.2</version>
-        <scope>provided</scope>
+        <groupId>name.falgout.jeffrey.testing</groupId>
+        <artifactId>annotation-processor-testing</artifactId>
+        <version>0.1.1-SNAPSHOT</version>
       </dependency>
+      <dependency>
+        <groupId>name.falgout.jeffrey.testing</groupId>
+        <artifactId>annotation-processor-testing-tests</artifactId>
+        <version>0.1.1-SNAPSHOT</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- Compile dependencies -->
       <dependency>
         <groupId>com.google.auto</groupId>
         <artifactId>auto-common</artifactId>
@@ -70,21 +79,31 @@
         <version>0.10</version>
       </dependency>
       <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-core</artifactId>
-        <version>2.2.9</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
         <groupId>name.falgout.jeffrey.testing</groupId>
         <artifactId>lambda-matcher</artifactId>
         <version>0.2.0</version>
+      </dependency>
+
+      <!-- Provided dependencies -->
+      <dependency>
+        <groupId>com.google.auto.value</groupId>
+        <artifactId>auto-value</artifactId>
+        <version>1.2</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
         <version>3.0.1</version>
         <scope>provided</scope>
+      </dependency>
+
+      <!-- Test dependencies -->
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>2.2.9</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

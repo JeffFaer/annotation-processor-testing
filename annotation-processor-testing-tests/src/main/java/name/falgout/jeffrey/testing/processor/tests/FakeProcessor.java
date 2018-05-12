@@ -1,27 +1,25 @@
-package name.falgout.jeffrey.testing.processor.junit;
+package name.falgout.jeffrey.testing.processor.tests;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
+import com.google.auto.common.BasicAnnotationProcessor;
+import com.google.auto.common.MoreElements;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.SetMultimap;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.Collections;
 import java.util.Set;
 import java.util.function.Function;
-
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
-
-import com.google.auto.common.BasicAnnotationProcessor;
-import com.google.auto.common.MoreElements;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.SetMultimap;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public final class FakeProcessor extends BasicAnnotationProcessor {

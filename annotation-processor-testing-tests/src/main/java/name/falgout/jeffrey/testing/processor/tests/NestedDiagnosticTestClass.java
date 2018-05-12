@@ -1,13 +1,10 @@
-package name.falgout.jeffrey.testing.processor.junit;
-
-import org.junit.runner.RunWith;
+package name.falgout.jeffrey.testing.processor.tests;
 
 import name.falgout.jeffrey.testing.processor.ExpectError;
 import name.falgout.jeffrey.testing.processor.UseProcessor;
 
-@RunWith(DiagnosticTester.class)
 @UseProcessor(FakeProcessor.class)
-public class NestedDiagnosticTesterTestClass {
+public class NestedDiagnosticTestClass {
   @ExpectError(lineOffset = 1)
   @FakeProcessor.Error
   void method1() {}
@@ -30,7 +27,7 @@ public class NestedDiagnosticTesterTestClass {
     @ExpectError("d") @FakeProcessor.Error("d")
     void method2() {}
   }
-  
+
   @ExpectError("e") @FakeProcessor.Error("e")
   void method2() {}
 

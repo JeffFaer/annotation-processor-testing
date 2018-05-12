@@ -1,10 +1,10 @@
-package name.falgout.jeffrey.testing.processor.junit;
+package name.falgout.jeffrey.testing.processor.tests;
 
 import name.falgout.jeffrey.testing.processor.ExpectError;
 import name.falgout.jeffrey.testing.processor.UseProcessor;
 
 @UseProcessor(FakeProcessor.class)
-public class DiagnosticTesterTestClass {
+public class DiagnosticTestClass {
   @ExpectError(value = "foo", testName = "sameLine") @FakeProcessor.Error("foo")
   void method1() {}
 

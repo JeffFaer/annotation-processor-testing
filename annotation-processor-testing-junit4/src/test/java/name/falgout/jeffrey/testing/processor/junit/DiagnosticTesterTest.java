@@ -9,7 +9,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Predicate;
-
+import name.falgout.jeffrey.testing.processor.tests.DiagnosticTestClass;
+import name.falgout.jeffrey.testing.processor.tests.NestedDiagnosticTestClass;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
@@ -27,7 +28,7 @@ public class DiagnosticTesterTest {
 
   @Test
   public void runTestClass() throws InitializationError {
-    Runner runner = new DiagnosticTester(DiagnosticTesterTestClass.class);
+    Runner runner = new DiagnosticTester(DiagnosticTestClass.class);
     runner.run(runNotifier);
 
     for (String name : Arrays.asList("sameLine", "nextLine", "wrongMessage", "wrongKind",
@@ -51,7 +52,7 @@ public class DiagnosticTesterTest {
 
   @Test
   public void runNestedTestClass() throws InitializationError {
-    Runner runner = new DiagnosticTester(NestedDiagnosticTesterTestClass.class);
+    Runner runner = new DiagnosticTester(NestedDiagnosticTestClass.class);
     runner.run(runNotifier);
 
     InOrder order = inOrder(runNotifier);
@@ -63,7 +64,7 @@ public class DiagnosticTesterTest {
 
     Description description = runner.getDescription();
     assertThat(description.getChildren()).hasSize(4);
-    assertThat(description.getClassName()).endsWith("NestedDiagnosticTesterTestClass");
+    assertThat(description.getClassName()).endsWith("NestedDiagnosticTestClass");
 
     assertThat(description.getChildren().get(0).getMethodName()).contains("#1@");
     assertThat(description.getChildren().get(2).getMethodName()).contains("#6@");
