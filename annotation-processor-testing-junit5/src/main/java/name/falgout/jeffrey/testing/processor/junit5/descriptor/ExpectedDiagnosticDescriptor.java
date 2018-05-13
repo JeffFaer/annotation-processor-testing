@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import name.falgout.jeffrey.testing.processor.ExpectedDiagnostic;
 import name.falgout.jeffrey.testing.processor.junit5.AnnotationProcessorContext;
+import org.junit.jupiter.api.Assertions;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.UniqueId;
@@ -69,6 +70,14 @@ final class ExpectedDiagnosticDescriptor
   public AnnotationProcessorContext execute(
       AnnotationProcessorContext context,
       DynamicTestExecutor dynamicTestExecutor) {
+    if (context.getActualDiagnostics().isEmpty()) {
+      Assertions.fail(
+          String.format(
+              "Expected a diagnostic %s on line %d, but there were none.",
+              expectedDiagnostic.getOriginalAnnotation(),
+              expectedDiagnostic.getExpectedLineNumber()));
+    }
+
     assertThat(context.getActualDiagnostics().poll(), expectedDiagnostic.asMatcher());
     return context;
   }
