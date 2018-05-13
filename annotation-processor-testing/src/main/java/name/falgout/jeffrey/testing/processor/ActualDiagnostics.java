@@ -1,19 +1,17 @@
 package name.falgout.jeffrey.testing.processor;
 
+import com.google.testing.compile.Compilation;
+import com.google.testing.compile.Compiler;
+import com.google.testing.compile.JavaFileObjects;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-
 import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
-
-import com.google.testing.compile.Compilation;
-import com.google.testing.compile.Compiler;
-import com.google.testing.compile.JavaFileObjects;
 
 public final class ActualDiagnostics {
   static final Comparator<Diagnostic<?>> ACTUAL_DIAGNOSTIC_LINE_ORDER =

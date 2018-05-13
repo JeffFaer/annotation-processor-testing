@@ -1,5 +1,7 @@
 package name.falgout.jeffrey.testing.processor;
 
+import static name.falgout.jeffrey.testing.processor.ActualDiagnostics.getSourceFile;
+
 import com.google.auto.value.AutoAnnotation;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
@@ -15,6 +17,10 @@ public final class ExpectedDiagnostics {
           .thenComparing(ed -> ed.getExpectDiagnostic().testName());
 
   private ExpectedDiagnostics() {}
+
+  public static List<ExpectedDiagnostic<?>> getExpectedDiagnostics(Class<?> clazz) {
+    return getExpectedDiagnostics(getSourceFile(clazz));
+  }
 
   public static List<ExpectedDiagnostic<?>> getExpectedDiagnostics(JavaFileObject file) {
     return getExpectedDiagnostics(Compiler.javac(), file);

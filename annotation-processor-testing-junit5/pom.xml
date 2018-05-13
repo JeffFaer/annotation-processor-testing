@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>annotation-processor-testing-parent</artifactId>
+    <groupId>name.falgout.jeffrey.testing</groupId>
+    <version>0.1.1-SNAPSHOT</version>
+  </parent>
+  <artifactId>annotation-processor-testing-junit5</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>name.falgout.jeffrey.testing</groupId>
+      <artifactId>annotation-processor-testing</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>name.falgout.jeffrey.testing</groupId>
+      <artifactId>annotation-processor-testing-tests</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-engine</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-commons</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.auto.service</groupId>
+      <artifactId>auto-service</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>name.falgout.jeffrey.testing.junit5</groupId>
+      <artifactId>extension-testing</artifactId>
+      <version>1.0.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.truth</groupId>
+      <artifactId>truth</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.truth.extensions</groupId>
+      <artifactId>truth-java8-extension</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>
