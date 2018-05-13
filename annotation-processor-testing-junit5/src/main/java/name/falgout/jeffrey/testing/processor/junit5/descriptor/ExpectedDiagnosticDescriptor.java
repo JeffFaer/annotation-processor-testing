@@ -14,12 +14,13 @@ import org.junit.platform.engine.support.hierarchical.Node;
 
 final class ExpectedDiagnosticDescriptor
     extends AbstractTestDescriptor implements Node<AnnotationProcessorContext> {
-  static ExpectedDiagnosticDescriptor create(
-      TestDescriptor parent,
-      ExpectedDiagnostic<?> expectedDiagnostic) {
+  static ExpectedDiagnosticDescriptor addChild(
+      TestDescriptor parent, ExpectedDiagnostic<?> expectedDiagnostic) {
     UniqueId uniqueId = createUniqueId(parent.getUniqueId(), expectedDiagnostic);
     ExpectedDiagnosticDescriptor descriptor =
         new ExpectedDiagnosticDescriptor(uniqueId, expectedDiagnostic);
+
+    parent.addChild(descriptor);
 
     return descriptor;
   }

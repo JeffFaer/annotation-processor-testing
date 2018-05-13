@@ -9,17 +9,17 @@ public class NestedDiagnosticTestClass {
   @FakeProcessor.Error
   void method1() {}
 
-  static class Static {
+  public static class Static {
      @ExpectError("a") @FakeProcessor.Error("a")
      void method1() {}
 
-    static class StaticStatic {
+    public static class StaticStatic {
       @ExpectError(value = "b", lineOffset = 1)
       @FakeProcessor.Error("b")
       void method() {}
     }
 
-    class StaticInstance {
+    public class StaticInstance {
       @ExpectError("c") @FakeProcessor.Error("c")
       void method() {}
     }
@@ -31,11 +31,11 @@ public class NestedDiagnosticTestClass {
   @ExpectError("e") @FakeProcessor.Error("e")
   void method2() {}
 
-  class Instance {
+  public class Instance {
     @ExpectError("f") @FakeProcessor.Error("f")
     void method1() {}
 
-    class InstanceInstance {
+    public class InstanceInstance {
       @ExpectError("g") @FakeProcessor.Error("g")
       void method() {}
     }

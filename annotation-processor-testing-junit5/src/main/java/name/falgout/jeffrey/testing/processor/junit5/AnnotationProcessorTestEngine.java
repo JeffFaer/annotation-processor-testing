@@ -11,6 +11,7 @@ import name.falgout.jeffrey.testing.processor.UseProcessor;
 import name.falgout.jeffrey.testing.processor.junit5.descriptor.AnnotatedClassDescriptor;
 import name.falgout.jeffrey.testing.processor.junit5.descriptor.AnnotationProcessorTestEngineDescriptor;
 import org.junit.platform.commons.util.ClassFilter;
+import org.junit.platform.commons.util.PreconditionViolationException;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestDescriptor;
@@ -51,9 +52,13 @@ public final class AnnotationProcessorTestEngine extends
             .stream()
             .map(ClassSelector::getJavaClass))
         .filter(filter)
-        .forEach(
-            clazz ->
-                rootDescriptor.addChild(AnnotatedClassDescriptor.create(rootDescriptor, clazz)));
+        .forEach(clazz -> {
+          try {
+            AnnotatedClassDescriptor.addChild(rootDescriptor, clazz);
+          } catch (ClassNotFoundException e) {
+            throw new PreconditionViolationException("Could not load class.", e);
+          }
+        });
 
     return rootDescriptor;
   }
