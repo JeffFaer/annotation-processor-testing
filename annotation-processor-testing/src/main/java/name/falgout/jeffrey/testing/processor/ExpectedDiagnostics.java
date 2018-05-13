@@ -1,18 +1,16 @@
 package name.falgout.jeffrey.testing.processor;
 
-import java.util.Comparator;
-import java.util.List;
-
-import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
-
 import com.google.auto.value.AutoAnnotation;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.Compiler;
+import java.util.Comparator;
+import java.util.List;
+import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
 
 public final class ExpectedDiagnostics {
   private static final Comparator<ExpectedDiagnostic<?>> EXPECTED_DIAGNOSTIC_LINE_ORDER =
-      Comparator.comparing(ExpectedDiagnostic<?>::getExpectedLineNumber)
+      Comparator.<ExpectedDiagnostic<?>>comparingLong(ExpectedDiagnostic::getExpectedLineNumber)
           .thenComparing(ed -> ed.getExpectDiagnostic().value())
           .thenComparing(ed -> ed.getExpectDiagnostic().testName());
 
