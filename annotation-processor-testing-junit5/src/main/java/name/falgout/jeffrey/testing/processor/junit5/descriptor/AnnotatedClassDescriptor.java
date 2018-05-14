@@ -64,7 +64,7 @@ public final class AnnotatedClassDescriptor
 
   @Override
   public Type getType() {
-    return Type.CONTAINER;
+    return Type.CONTAINER_AND_TEST;
   }
 
   @Override
