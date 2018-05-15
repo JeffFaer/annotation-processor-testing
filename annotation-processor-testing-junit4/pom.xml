@@ -3,7 +3,7 @@
   <parent>
     <groupId>name.falgout.jeffrey.testing</groupId>
     <artifactId>annotation-processor-testing-parent</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.2.0</version>
   </parent>
   <artifactId>annotation-processor-testing-junit4</artifactId>
   <dependencies>
