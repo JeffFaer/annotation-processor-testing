@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>name.falgout.jeffrey.testing</groupId>
   <artifactId>annotation-processor-testing-parent</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
     <module>annotation-processor-testing</module>
@@ -35,7 +35,7 @@
     <developerConnection>scm:git:git@github.com:JeffreyFalgout/${project.name}.git
     </developerConnection>
     <url>${project.url}</url>
-    <tag>v0.2.0</tag>
+    <tag>HEAD</tag>
   </scm>
   <issueManagement>
     <system>github</system>
@@ -64,12 +64,12 @@
       <dependency>
         <groupId>name.falgout.jeffrey.testing</groupId>
         <artifactId>annotation-processor-testing</artifactId>
-        <version>0.2.0</version>
+        <version>0.2.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>name.falgout.jeffrey.testing</groupId>
         <artifactId>annotation-processor-testing-tests</artifactId>
-        <version>0.2.0</version>
+        <version>0.2.1-SNAPSHOT</version>
         <scope>test</scope>
       </dependency>
 
